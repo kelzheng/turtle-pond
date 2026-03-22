@@ -66,6 +66,7 @@ A pond and its inhabitants. Interactive canvas.
 | **Click-drag on water** | Draw lily pads and flowers along the stroke (minimum spacing between placements). |
 | **Click on land** | Place rocks or wildflowers. |
 | **Right-click creature** | Pet it — floating ♥ appears, grows bigger with more pets. |
+| **Touch: press and hold on a creature** (~½ s, finger still) | Same as pet / right-click. Move ~16px before the hold completes to **drag** instead. Light haptic where supported. |
 | **Click default name in status bar** (`turtle`, `dragonfly 1`, `fish 1`, …) | Prompt to name that creature (**one-time**; name persists). **Clicking the creature in the world does not open the prompt.** |
 | **Eraser button (✕, bottom-right)** | Toggle eraser mode to remove drawn elements. |
 | **WASD keys** | Pan camera around the world. |
@@ -177,7 +178,7 @@ turtle-pond/
 - **Update order**: `LandFlies.update` then `Dragonflies.update` so positions stay consistent
 - **Growth**: turtle +8px/level (max 20), fish +3px/level (max 12), dragonfly +2.5px/level (max 12)
 - **Naming**: one-time `prompt` when clicking **default label** in status bar; name above creature when set
-- **Petting**: right-click → floating ♥, size grows with pet count (capped 36px)
+- **Petting**: right-click (desktop) or **touch long-press** on creature (~480ms, finger movement under ~16px) → floating ♥; size grows with pet count (capped 36px); optional `navigator.vibrate` on touch
 - **Pond fill**: uses same wobble boundary as ASCII waves, scaled 1.08x, quadratic curves for smoothness
 - **Pond ASCII grid**: iterates **`worldW` × `worldH`** (800×700), not `canvas` size — narrow viewports must still shade the whole pond in world space; looping only to `canvas.width` left the right side as solid fill-only on phones
 

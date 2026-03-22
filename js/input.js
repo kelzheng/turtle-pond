@@ -2,6 +2,11 @@
 const Input = {
   PINCH_ZOOM_MIN: 0.38,
   PINCH_ZOOM_MAX: 2.75,
+  /** Touch: hold still on a creature to pet (no right-click on phones). */
+  PET_LONG_PRESS_MS: 480,
+  PET_LONG_PRESS_MOVE_PX: 16,
+  _petLongPress: null,
+  _petLongPressTimer: null,
   pinchActive: false,
   pinchStartDist: 1,
   pinchStartZoom: 1,
@@ -110,6 +115,7 @@ const Input = {
       e.preventDefault();
       this.pinchActive = false;
       this.lastTapTime = 0;
+      this._clearPetLongPress();
       if (e.touches.length > 0) return;
       const x = this.lastTouchClientX;
       const y = this.lastTouchClientY;
@@ -166,6 +172,7 @@ const Input = {
     }
     this.mouseDown = false;
     this.lastTapTime = 0;
+    this._clearPetLongPress();
     this.canvas.style.cursor = this.drawing.eraserMode ? 'crosshair' : 'default';
   },
 
@@ -219,22 +226,68 @@ const Input = {
     return null;
   },
 
+  _petCreature(c) {
+    if (!c) return;
+    if (!c.pets) c.pets = 0;
+    c.pets++;
+    const heartSize = Math.min(36, 14 + c.pets * 2);
+    this.hearts.push({
+      x: c.x,
+      y: c.y - (c.size || 20) * 0.5,
+      born: performance.now(),
+      duration: 1500,
+      baseSize: heartSize,
+    });
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate(12);
+      } catch (_) { /* iOS may ignore */ }
+    }
+  },
+
   _onRightClick(clientX, clientY) {
     const pos = this._getPos(clientX, clientY);
     const hit = this._creatureAt(pos.x, pos.y);
-    if (hit) {
-      const c = hit.creature;
-      if (!c.pets) c.pets = 0;
-      c.pets++;
-      // Heart size grows with total pets (capped)
-      const heartSize = Math.min(36, 14 + c.pets * 2);
-      this.hearts.push({
-        x: c.x,
-        y: c.y - (c.size || 20) * 0.5,
-        born: performance.now(),
-        duration: 1500,
-        baseSize: heartSize,
-      });
+    if (hit) this._petCreature(hit.creature);
+  },
+
+  _clearPetLongPress() {
+    if (this._petLongPressTimer !== null) {
+      clearTimeout(this._petLongPressTimer);
+      this._petLongPressTimer = null;
+    }
+    this._petLongPress = null;
+  },
+
+  _bindDragForCreature(creature, type, pos) {
+    if (type === 'turtle') {
+      this.dragging = creature;
+      this.draggingType = 'turtle';
+      this.clickedCreature = creature;
+      creature.dragging = true;
+      this.dragOffsetX = creature.x - pos.x;
+      this.dragOffsetY = creature.y - pos.y;
+      this.canvas.style.cursor = 'grabbing';
+      return;
+    }
+    if (type === 'dragonfly') {
+      this.dragging = creature;
+      this.draggingType = 'dragonfly';
+      this.clickedCreature = creature;
+      creature.dragging = true;
+      this.dragOffsetX = creature.x - pos.x;
+      this.dragOffsetY = creature.y - pos.y;
+      this.canvas.style.cursor = 'grabbing';
+      return;
+    }
+    if (type === 'fish') {
+      this.dragging = creature;
+      this.draggingType = 'fish';
+      this.clickedCreature = creature;
+      creature.dragging = true;
+      this.dragOffsetX = creature.x - pos.x;
+      this.dragOffsetY = creature.y - pos.y;
+      this.canvas.style.cursor = 'grabbing';
     }
   },
 
@@ -265,44 +318,29 @@ const Input = {
       return;
     }
 
-    // Check turtle
-    if (this.turtle.hitTest(pos.x, pos.y)) {
-      this.dragging = this.turtle;
-      this.draggingType = 'turtle';
-      this.clickedCreature = this.turtle;
-      this.turtle.dragging = true;
-      this.dragOffsetX = this.turtle.x - pos.x;
-      this.dragOffsetY = this.turtle.y - pos.y;
-      this.canvas.style.cursor = 'grabbing';
-      return;
-    }
-
-    // Check dragonflies
-    const df = this.dragonflies.hitTest(pos.x, pos.y);
-    if (df) {
-      this.dragging = df;
-      this.draggingType = 'dragonfly';
-      this.clickedCreature = df;
-      df.dragging = true;
-      this.dragOffsetX = df.x - pos.x;
-      this.dragOffsetY = df.y - pos.y;
-      this.canvas.style.cursor = 'grabbing';
-      return;
-    }
-
-    // Check fish (now draggable)
-    if (typeof Fishes !== 'undefined') {
-      const fish = Fishes.hitTest(pos.x, pos.y);
-      if (fish) {
-        this.dragging = fish;
-        this.draggingType = 'fish';
-        this.clickedCreature = fish;
-        fish.dragging = true;
-        this.dragOffsetX = fish.x - pos.x;
-        this.dragOffsetY = fish.y - pos.y;
-        this.canvas.style.cursor = 'grabbing';
+    const touchStart = e && e.type === 'touchstart';
+    const ch = this._creatureAt(pos.x, pos.y);
+    if (ch) {
+      if (touchStart) {
+        this._clearPetLongPress();
+        this._petLongPress = {
+          creature: ch.creature,
+          type: ch.type,
+          clientX,
+          clientY,
+          petTriggered: false,
+        };
+        const self = this;
+        this._petLongPressTimer = setTimeout(() => {
+          self._petLongPressTimer = null;
+          if (!self._petLongPress || !self.mouseDown || self._petLongPress.petTriggered) return;
+          self._petCreature(self._petLongPress.creature);
+          self._petLongPress.petTriggered = true;
+        }, this.PET_LONG_PRESS_MS);
         return;
       }
+      this._bindDragForCreature(ch.creature, ch.type, pos);
+      return;
     }
 
     // Check drawn elements
@@ -325,6 +363,24 @@ const Input = {
     const pos = this._getPos(clientX, clientY);
     this.mouseX = pos.x;
     this.mouseY = pos.y;
+
+    if (
+      this._petLongPress &&
+      !this._petLongPress.petTriggered &&
+      this.mouseDown &&
+      !this.dragging
+    ) {
+      const pl = this._petLongPress;
+      const moved = Math.hypot(clientX - pl.clientX, clientY - pl.clientY);
+      if (moved > this.PET_LONG_PRESS_MOVE_PX) {
+        if (this._petLongPressTimer !== null) {
+          clearTimeout(this._petLongPressTimer);
+          this._petLongPressTimer = null;
+        }
+        this._bindDragForCreature(pl.creature, pl.type, pos);
+        this._petLongPress = null;
+      }
+    }
 
     if (this.drawing.eraserMode && this.mouseDown) {
       this.drawing.eraseAt(pos.x, pos.y);
@@ -364,6 +420,8 @@ const Input = {
   },
 
   _onUp(clientX, clientY) {
+    this._clearPetLongPress();
+
     if (this.pendingStatusBarName && !this.statusBarNameCancelled) {
       const { creature, type } = this.pendingStatusBarName;
       if (!creature.name) {
