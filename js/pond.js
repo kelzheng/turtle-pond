@@ -64,8 +64,6 @@ const Pond = {
   },
 
   render(ctx, canvas, time, palette) {
-    const w = canvas.width;
-    const h = canvas.height;
     const t = time * 0.001;
 
     ctx.font = `${this.fontSize}px monospace`;
@@ -95,9 +93,10 @@ const Pond = {
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    // Render grid of ASCII characters
-    for (let y = 0; y < h; y += this.charH) {
-      for (let x = 0; x < w; x += this.charW) {
+    // World-space grid (fixed worldW × worldH). Using canvas width/height here breaks on
+    // narrow viewports: loop x never reaches the pond’s right side, so water shows as solid fill only.
+    for (let y = 0; y < this.worldH; y += this.charH) {
+      for (let x = 0; x < this.worldW; x += this.charW) {
         const d = this.distFromEdge(x, y);
 
         if (d < -0.05) {

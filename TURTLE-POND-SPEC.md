@@ -179,6 +179,7 @@ turtle-pond/
 - **Naming**: one-time `prompt` when clicking **default label** in status bar; name above creature when set
 - **Petting**: right-click → floating ♥, size grows with pet count (capped 36px)
 - **Pond fill**: uses same wobble boundary as ASCII waves, scaled 1.08x, quadratic curves for smoothness
+- **Pond ASCII grid**: iterates **`worldW` × `worldH`** (800×700), not `canvas` size — narrow viewports must still shade the whole pond in world space; looping only to `canvas.width` left the right side as solid fill-only on phones
 
 ### Canvas and game-loop robustness
 If world drawing throws before `ctx.restore()`, the canvas can keep a **stuck world transform**; the next frame stacks another translate so **screen-space UI** (clock, status bar) and **turtle** can appear to vanish while other layers still draw. Mitigations in `main.js` / `turtle.js` / `dragonfly.js`:
