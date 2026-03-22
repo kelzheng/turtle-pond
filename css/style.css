@@ -1,0 +1,97 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #2a3a2a;
+  cursor: default;
+}
+
+#pond-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#clock-widget {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+  z-index: 10;
+}
+
+#clock-widget:hover {
+  opacity: 1;
+}
+
+#clock-canvas {
+  cursor: pointer;
+}
+
+#time-slider {
+  width: 80px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#clock-widget:hover #time-slider {
+  opacity: 1;
+}
+
+#time-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+#eraser-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.15);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0.5;
+  transition: opacity 0.3s, background 0.3s, border-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#eraser-btn:hover {
+  opacity: 0.9;
+}
+
+#eraser-btn.active {
+  opacity: 1;
+  background: rgba(180, 60, 60, 0.4);
+  border-color: rgba(220, 100, 100, 0.6);
+  color: rgba(255, 200, 200, 0.9);
+}

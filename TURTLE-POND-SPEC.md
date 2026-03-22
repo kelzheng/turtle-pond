@@ -1,0 +1,175 @@
+# Turtle Pond Spec
+
+## Overview
+
+An interactive ASCII pond and its inhabitants.
+
+---
+
+## Visual Style: Hybrid ASCII + Colour
+
+- ASCII characters (`~`, `@`, `o`, `·`, etc.) form all elements
+- Rendered with **earthy, pastel colour fills** — not monochrome
+- Background shading uses flat colours (no gradients) behind ASCII texture
+- Palette shifts with time of day
+
+### Colour Palette
+
+| Element        | Colours                              |
+|----------------|--------------------------------------|
+| Pond water     | Soft blue-greens, teal, slate blue   |
+| Land           | Sage, olive, warm brown (minimal)    |
+| Turtle shell   | Flat olive/forest green              |
+| Lily pads      | Soft green, mint                     |
+| Flowers        | Dusty pink, lavender, pale yellow    |
+| Dragonflies    | Iridescent blue, lavender, teal      |
+| Fish           | Muted green, brown, blue-grey, rusty |
+| Rock           | Flat grey-brown with ASCII texture   |
+| Fireflies      | Warm amber glow (dusk/night only)    |
+| Stars          | Pale white-yellow (night only)       |
+
+---
+
+## Layout
+
+- **Fixed world size** (800x700) — viewport shows what fits, WASD to pan
+- **Pond**: irregular wobble-edged shape, ~60-70% of world
+- **Land**: minimal — sparse dots, no busy grass texture
+- **Rock**: large irregular ASCII rock (`O`, `@`, `o`, `·`) in centre of pond
+- **No text** except creature names and the clock widget (top-right)
+
+---
+
+## Inhabitants
+
+| Creature     | Count | Behaviour |
+|--------------|-------|-----------|
+| Turtle       | 1     | Swims, walks on land, sits on rock (eyes closed), eats food + lily pads, grows when eating |
+| Fish         | 4-7   | Swim underwater, seek and eat food, grow when eating, draggable |
+| Dragonflies  | 3     | Flit and hover above pond, draggable |
+| Fireflies    | 5-12  | Appear at dusk/night, drift with warm glow |
+
+---
+
+## Interactions
+
+| Action | What Happens |
+|--------|-------------|
+| **Double-click on water** | Drops food pellet. Turtle and fish swim toward it. |
+| **Drag turtle** | Pick up and drop anywhere. Resumes autonomous behaviour. |
+| **Drag fish** | Pick up and relocate within pond. |
+| **Drag dragonflies** | Grab and relocate. Resume flying. |
+| **Drag drawn elements** | Move lily pads, flowers, rocks. |
+| **Click-drag on water** | Draw lily pads and flowers (max count enforced). |
+| **Click on land** | Place rocks or wildflowers. |
+| **Right-click creature** | Pet it — floating ♥ appears, grows bigger with more pets. |
+| **Click unnamed creature** | Prompt to name it (one-time only, name persists). |
+| **Eraser button (✕, bottom-right)** | Toggle eraser mode to remove drawn elements. |
+| **WASD keys** | Pan camera around the world. |
+| **Clock slider (top-right)** | Drag to change time of day. Click clock face to reset to real time. |
+
+---
+
+## Creature Behaviours
+
+### Turtle
+- **Wander**: gentle arcs through the pond
+- **Surface**: occasionally pops head up with ripple
+- **Land**: sometimes crawls onto shore, eventually returns
+- **Rock rest**: climbs onto centre rock, closes eyes, rests 5-13s
+- **Seek food**: detects food within 200px, swims toward it
+- **Eat**: nibbles food pellets and nearby lily pads, grows 4px per meal
+- **Growth**: visible size increase, max 20 levels (55 → up to 135px)
+
+### Fish
+- **Swim**: smooth underwater movement with tail wag, semi-transparent
+- **Seek food**: detect food within 120px, actively swim toward it
+- **Eat**: consume food pellets, grow 3px per meal
+- **Growth**: max 12 levels
+
+### Dragonflies
+- **Fly**: erratic darting movement near pond
+- **Hover**: pause mid-air with gentle bob for 1-3 seconds
+- **Stay near pond**: gravitates back toward water area
+
+### Fireflies
+- **Night/dusk only**: 12 at night, 5 at dusk, 0 during day
+- **Drift**: random gentle movement near pond
+- **Glow**: pulsing amber `*` with soft outer glow
+
+---
+
+## Time of Day
+
+| Time       | Mood |
+|------------|------|
+| 6am-10am   | Morning — warm light, pale sky |
+| 10am-4pm   | Daytime — bright pastels, full colour |
+| 4pm-7pm    | Golden hour — amber/orange tones |
+| 7pm-9pm    | Dusk — purple/pink sky, fireflies appear |
+| 9pm-6am    | Night — deep blues, stars, full fireflies |
+
+- Analog clock in top-right (screen-space, doesn't pan with camera)
+- Range slider for manual time override
+- Click clock face to snap back to real time
+
+---
+
+## Drawing System
+
+- Click-drag on water → lily pads and flowers along stroke
+- Click on land → rocks or wildflowers
+- Max element count enforced
+- All drawn elements are draggable
+- Eraser mode (✕ button) to click/drag-remove elements
+- Turtle can eat drawn lily pads
+
+---
+
+## Technical Architecture
+
+### Stack
+- Vanilla HTML/CSS/JS — no dependencies, no build tools
+- HTML5 Canvas via `requestAnimationFrame`
+
+### File Structure
+
+```
+turtle-pond/
+  index.html
+  css/style.css
+  js/
+    main.js          — game loop, camera (WASD), rendering pipeline
+    pond.js          — pond shape, water/land ASCII, ripples
+    turtle.js        — turtle AI state machine, rendering
+    fish.js          — Fish class + Fishes manager
+    dragonfly.js     — Dragonfly class + Dragonflies manager
+    food.js          — food pellet spawning/lifecycle
+    drawing.js       — user drawing (lily pads, flowers, rocks)
+    time.js          — time-of-day palettes, day/night cycle
+    input.js         — mouse/touch/keyboard, drag, draw, pet, name
+    rock.js          — centre pond rock
+  TURTLE-POND-SPEC.md  (this file)
+```
+
+### Key Implementation Details
+- **Fixed world (800x700), scrollable viewport**: camera pans with WASD
+- **Camera transform**: `ctx.translate(-camX, -camY)` for world; clock rendered in screen-space after `ctx.restore()`
+- **Input → world coords**: screen clicks converted via `+ camX/camY`
+- **Turtle AI**: state machine — wander, idle, seekFood, surfacing, toLand, toWater, toRock, onRock
+- **Fish AI**: seek food within radius, smooth turning, underwater transparency
+- **Growth**: turtle 4px/meal (max 20), fish 3px/meal (max 12)
+- **Naming**: one-time prompt on click; name renders above creature permanently
+- **Petting**: right-click → floating ♥, size grows with pet count (capped 36px)
+- **Pond fill**: uses same wobble boundary as ASCII waves, scaled 1.08x, quadratic curves for smoothness
+
+---
+
+## Future Ideas
+
+- Multiple turtles (click to spawn)
+- Frogs with tongue-eating animation
+- Sound effects (muted by default)
+- Save/load state via localStorage
+- Seasonal palette changes
+- Mobile touch gestures for panning
