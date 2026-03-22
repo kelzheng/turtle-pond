@@ -188,3 +188,5 @@ turtle-pond/
 - Save/load state via localStorage
 - Seasonal palette changes
 - Mobile touch gestures for panning
+- Weather (rain, snow, ice)
+- New turtle ponds to discover on WASD pan
