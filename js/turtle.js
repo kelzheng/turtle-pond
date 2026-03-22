@@ -186,8 +186,10 @@ const Turtle = {
     // Keep on screen
     const margin = 40;
     const canvas = document.getElementById('pond-canvas');
-    this.x = Math.max(margin, Math.min(canvas.width - margin, this.x));
-    this.y = Math.max(margin, Math.min(canvas.height - margin, this.y));
+    if (canvas) {
+      this.x = Math.max(margin, Math.min(canvas.width - margin, this.x));
+      this.y = Math.max(margin, Math.min(canvas.height - margin, this.y));
+    }
   },
 
   _wander(dt, pond) {
@@ -290,8 +292,11 @@ const Turtle = {
   },
 
   render(ctx, time, palette) {
+    if (!isFinite(this.x) || !isFinite(this.y) || !isFinite(this.size) || this.size <= 0) return;
+
     const t = time * 0.001;
     ctx.save();
+    try {
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle + (this.eating ? Math.sin(t * 20) * 0.12 : 0));
 
@@ -329,12 +334,15 @@ const Turtle = {
     ctx.font = `${Math.floor(s * 0.2)}px monospace`;
     ctx.fillText('~', -s * 0.46, Math.sin(t * 3) * 2);
 
-    // Shell — shaded oval behind ASCII (original look)
+    // Shell — shaded oval behind ASCII (scaled arc; avoids ctx.ellipse quirks)
     ctx.globalAlpha = 0.85;
     ctx.fillStyle = shellHi;
+    ctx.save();
+    ctx.scale(s * 0.38, s * 0.3);
     ctx.beginPath();
-    ctx.ellipse(0, 0, s * 0.38, s * 0.3, 0, 0, Math.PI * 2);
+    ctx.arc(0, 0, 1, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
 
     // Shell — monospace cluster on top
     ctx.globalAlpha = 1;
@@ -362,9 +370,13 @@ const Turtle = {
     const headY = headBob;
 
     ctx.fillStyle = this.inWater ? '#6a9a55' : '#7aaa65';
+    ctx.save();
+    ctx.translate(headX, headY);
+    ctx.scale(s * 0.1, s * 0.08);
     ctx.beginPath();
-    ctx.ellipse(headX, headY, s * 0.1, s * 0.08, 0, 0, Math.PI * 2);
+    ctx.arc(0, 0, 1, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
 
     ctx.fillStyle = '#4a7a3a';
     ctx.font = `${Math.floor(s * 0.3)}px monospace`;
@@ -393,7 +405,9 @@ const Turtle = {
       ctx.fill();
     }
 
-    ctx.restore();
+    } finally {
+      ctx.restore();
+    }
 
     // Name label
     if (this.name) {

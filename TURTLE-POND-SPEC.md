@@ -83,6 +83,7 @@ A pond and its inhabitants. Interactive canvas.
 - **Eat**: **pond food pellets** → **+1 growth** (size `baseSize + growthLevel × 8`). **Lily pads / land flowers** can be nibbled away but **do not** add growth, eating animation, or status `●`
 - **Nibble pads/flowers**: each frame, probability `0.006 × (dt / 16)` to attempt a bite; removes one `lilypad` or `landflower` within **72px** of the turtle
 - **Growth**: max **20** levels; status bar shows up to 20 `●`
+- **Look**: shell/head use **scaled circular arcs** (not `ctx.ellipse`); **eyes** use `TimeSystem.eyeColours(palette)` so they track time-of-day palettes with the rest of the scene
 
 ### Fish
 - **Swim**: smooth underwater movement with tail wag, semi-transparent
@@ -174,6 +175,13 @@ turtle-pond/
 - **Naming**: one-time `prompt` when clicking **default label** in status bar; name above creature when set
 - **Petting**: right-click → floating ♥, size grows with pet count (capped 36px)
 - **Pond fill**: uses same wobble boundary as ASCII waves, scaled 1.08x, quadratic curves for smoothness
+
+### Canvas and game-loop robustness
+If world drawing throws before `ctx.restore()`, the canvas can keep a **stuck world transform**; the next frame stacks another translate so **screen-space UI** (clock, status bar) and **turtle** can appear to vanish while other layers still draw. Mitigations in `main.js` / `turtle.js` / `dragonfly.js`:
+- **`_render`**: `ctx.setTransform(1,0,0,1,0,0)` and `globalAlpha = 1` at the **start** of each frame (and again before clock + status bar); world draws inside `save` / `try` / `finally` / `restore` so **restore always runs once** per frame
+- **`_loop`**: `try`/`catch` around update + render, **`console.error`** on failure, **`requestAnimationFrame` always scheduled** so one error does not stop the loop
+- **`Turtle.render`**: skip if `x`/`y`/`size` are non-finite; outer **`try`/`finally`** around the turtle’s own `save`/`restore` so a throw cannot leave an extra stack level; shell/head ovals use **scale + `arc`** instead of `ctx.ellipse`
+- **On-screen clamp** (turtle, dragonfly): only read `canvas.width`/`height` if **`#pond-canvas`** exists (avoids `TypeError` aborting the whole frame)
 
 ---
 

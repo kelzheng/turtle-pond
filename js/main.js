@@ -85,35 +85,38 @@ const App = {
   },
 
   _loop(time) {
-    const dt = Math.min(50, time - this.lastTime);
-    this.lastTime = time;
+    try {
+      const dt = Math.min(50, time - this.lastTime);
+      this.lastTime = time;
 
-    // Update slider if using real time
-    if (TimeSystem.manualTime === null) {
-      const now = new Date();
-      this.timeSlider.value = now.getHours() * 60 + now.getMinutes();
+      // Update slider if using real time
+      if (TimeSystem.manualTime === null) {
+        const now = new Date();
+        this.timeSlider.value = now.getHours() * 60 + now.getMinutes();
+      }
+
+      // Camera pan with WASD
+      const panSpeed = 0.4;
+      if (this.keys['w']) this.camY -= panSpeed * dt;
+      if (this.keys['s']) this.camY += panSpeed * dt;
+      if (this.keys['a']) this.camX -= panSpeed * dt;
+      if (this.keys['d']) this.camX += panSpeed * dt;
+
+      // Update
+      Turtle.update(dt, time, Pond, Food.items, this.ripples, Drawing);
+      Food.update(dt, time, Turtle);
+      LandFlies.update(dt, time, Pond);
+      Dragonflies.update(dt, time, Pond, LandFlies);
+      Fishes.update(dt, time, Pond, Food.items, Drawing);
+      this._updateFireflies(dt, time);
+      Input.updateHearts(dt);
+
+      // Render
+      const palette = TimeSystem.getCurrentPalette();
+      this._render(time, palette);
+    } catch (err) {
+      console.error('Turtle Pond frame error:', err);
     }
-
-    // Camera pan with WASD
-    const panSpeed = 0.4;
-    if (this.keys['w']) this.camY -= panSpeed * dt;
-    if (this.keys['s']) this.camY += panSpeed * dt;
-    if (this.keys['a']) this.camX -= panSpeed * dt;
-    if (this.keys['d']) this.camX += panSpeed * dt;
-
-    // Update
-    Turtle.update(dt, time, Pond, Food.items, this.ripples, Drawing);
-    Food.update(dt, time, Turtle);
-    LandFlies.update(dt, time, Pond);
-    Dragonflies.update(dt, time, Pond, LandFlies);
-    Fishes.update(dt, time, Pond, Food.items, Drawing);
-    this._updateFireflies(dt, time);
-    Input.updateHearts(dt);
-
-    // Render
-    const palette = TimeSystem.getCurrentPalette();
-    this._render(time, palette);
-
     requestAnimationFrame((t) => this._loop(t));
   },
 
@@ -165,60 +168,48 @@ const App = {
     const h = this.canvas.height;
     const t = time * 0.001;
 
+    // Recover from any previous missed ctx.restore / bad matrix (stops turtle + HUD vanishing)
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+
     // Clear with sky colour
     ctx.fillStyle = palette.sky;
     ctx.fillRect(0, 0, w, h);
 
-    // Apply camera transform for world rendering
     ctx.save();
-    ctx.translate(-this.camX, -this.camY);
+    try {
+      ctx.translate(-this.camX, -this.camY);
 
-    // Stars (at night)
-    if (TimeSystem.isNight() || TimeSystem.isDusk()) {
-      const nightness = TimeSystem.isNight() ? 0.8 : 0.3;
-      for (const star of this.stars) {
-        const sx = star.x - this.camX;
-        const sy = star.y - this.camY;
-        if (sx < -5 || sx > w + 5 || sy < -5 || sy > h + 5) continue;
-        const twinkle = Math.sin(t * 1.5 + star.twinkle) * 0.3 + 0.7;
-        ctx.fillStyle = `rgba(255, 255, 240, ${twinkle * nightness})`;
-        ctx.fillRect(star.x, star.y, star.size, star.size);
+      // Stars (at night)
+      if (TimeSystem.isNight() || TimeSystem.isDusk()) {
+        const nightness = TimeSystem.isNight() ? 0.8 : 0.3;
+        for (const star of this.stars) {
+          const sx = star.x - this.camX;
+          const sy = star.y - this.camY;
+          if (sx < -5 || sx > w + 5 || sy < -5 || sy > h + 5) continue;
+          const twinkle = Math.sin(t * 1.5 + star.twinkle) * 0.3 + 0.7;
+          ctx.fillStyle = `rgba(255, 255, 240, ${twinkle * nightness})`;
+          ctx.fillRect(star.x, star.y, star.size, star.size);
+        }
       }
+
+      Pond.render(ctx, this.canvas, time, palette);
+      Fishes.render(ctx, time, palette);
+      Drawing.render(ctx, time);
+      Food.render(ctx, time);
+      LandFlies.render(ctx, time);
+      Pond.renderRipples(ctx, this.ripples, time);
+      Turtle.render(ctx, time, palette);
+      Dragonflies.render(ctx, time, palette);
+      this._renderFireflies(ctx, time);
+      Input.renderHearts(ctx, time);
+    } finally {
+      ctx.restore();
     }
 
-    // Pond (water + land)
-    Pond.render(ctx, this.canvas, time, palette);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
 
-    // Fish (under water, rendered before surface elements)
-    Fishes.render(ctx, time, palette);
-
-    // Drawn elements (lily pads, flowers, rocks)
-    Drawing.render(ctx, time);
-
-    // Food
-    Food.render(ctx, time);
-
-    // Land flies (dragonfly prey)
-    LandFlies.render(ctx, time);
-
-    // Ripples
-    Pond.renderRipples(ctx, this.ripples, time);
-
-    // Turtle
-    Turtle.render(ctx, time, palette);
-
-    // Dragonflies
-    Dragonflies.render(ctx, time, palette);
-
-    // Fireflies
-    this._renderFireflies(ctx, time);
-
-    // Hearts
-    Input.renderHearts(ctx, time);
-
-    ctx.restore();
-
-    // Screen-space UI
     this._renderClock(time);
     this._renderStatusBar(ctx);
   },

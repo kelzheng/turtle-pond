@@ -110,9 +110,11 @@ class Dragonfly {
 
     // Keep on screen
     const canvas = document.getElementById('pond-canvas');
-    const m = 30;
-    this.x = Math.max(m, Math.min(canvas.width - m, this.x));
-    this.y = Math.max(m, Math.min(canvas.height - m, this.y));
+    if (canvas) {
+      const m = 30;
+      this.x = Math.max(m, Math.min(canvas.width - m, this.x));
+      this.y = Math.max(m, Math.min(canvas.height - m, this.y));
+    }
   }
 
   _pickTarget(pond) {
