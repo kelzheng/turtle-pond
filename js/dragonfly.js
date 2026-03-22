@@ -130,13 +130,15 @@ class Dragonfly {
     return dx * dx + dy * dy < (this.size + 8) * (this.size + 8);
   }
 
-  render(ctx, time) {
+  render(ctx, time, palette) {
     const t = time * 0.001;
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
 
     const s = this.size;
+    const pal = palette || TimeSystem.getCurrentPalette();
+    const eyes = TimeSystem.eyeColours(pal);
     const flapOpen = 0.82 + Math.abs(Math.sin(this.wingPhase * 2 + t * 15)) * 0.28;
     const { r, g, b } = this.colour;
 
@@ -175,6 +177,14 @@ class Dragonfly {
     ctx.arc(headCx, 0, headR, 0, Math.PI * 2);
     ctx.fill();
 
+    ctx.fillStyle = eyes.open;
+    ctx.font = `${Math.max(6, Math.floor(s * 0.14))}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const pup = headR * 0.42;
+    ctx.fillText('•', headCx + headR * 0.35, -pup);
+    ctx.fillText('•', headCx + headR * 0.35, pup);
+
     ctx.restore();
 
     // Name label
@@ -211,9 +221,9 @@ const Dragonflies = {
     }
   },
 
-  render(ctx, time) {
+  render(ctx, time, palette) {
     for (const df of this.list) {
-      df.render(ctx, time);
+      df.render(ctx, time, palette);
     }
   },
 

@@ -9,10 +9,9 @@ const Drawing = {
   eraserMode: false,
 
   // Lily pad ASCII patterns
-  lilyPadChars: ['@', 'O', '◎', '●'],
+  lilyPadChars: ['@', '◎'],
   flowerChars: ['✿', '*', '❀', '✾', '⚘'],
   landFlowerChars: ['*', '+', '✿', '❀'],
-  rockChars: ['◦', '○', 'O', '●'],
 
   // Pastel flower colours
   flowerColours: [

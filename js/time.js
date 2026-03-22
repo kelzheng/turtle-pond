@@ -99,5 +99,41 @@ const TimeSystem = {
   isDusk() {
     const m = this.getMinutes();
     return m > 1100 && m < 1320;
-  }
+  },
+
+  /** 0–1 perceived brightness of palette.sky (`rgb()` or `#rrggbb`). */
+  skyLuminance(palette) {
+    const sky = palette && palette.sky;
+    if (!sky || typeof sky !== 'string') return 0.5;
+    let r;
+    let g;
+    let b;
+    const rgb = sky.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+    if (rgb) {
+      r = +rgb[1];
+      g = +rgb[2];
+      b = +rgb[3];
+    } else if (sky[0] === '#') {
+      const h = sky.slice(1);
+      const n = h.length === 3
+        ? [parseInt(h[0] + h[0], 16), parseInt(h[1] + h[1], 16), parseInt(h[2] + h[2], 16)]
+        : [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+      [r, g, b] = n;
+    } else {
+      return 0.5;
+    }
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  },
+
+  /** Open + closed eye colours (turtle, fish, dragonflies) from sky brightness. */
+  eyeColours(palette) {
+    const lum = this.skyLuminance(palette);
+    if (lum < 0.42) {
+      return { open: '#f2efe4', closed: '#9a9688' };
+    }
+    if (lum < 0.58) {
+      return { open: '#1a1810', closed: '#3a3530' };
+    }
+    return { open: '#000000', closed: '#2a4a2a' };
+  },
 };

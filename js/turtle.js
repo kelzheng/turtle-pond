@@ -269,7 +269,7 @@ const Turtle = {
     return a + diff * t;
   },
 
-  /** World position of the mouth — used for food reach tests (center is deep in the shell). */
+  /** World position of the mouth — forward of head (matches headExt). */
   _mouthOffset() {
     return (this.headUp ? this.size * 0.55 : this.size * 0.45);
   },
@@ -289,7 +289,7 @@ const Turtle = {
     return dx * dx + dy * dy < this.size * this.size;
   },
 
-  render(ctx, time) {
+  render(ctx, time, palette) {
     const t = time * 0.001;
     ctx.save();
     ctx.translate(this.x, this.y);
@@ -299,99 +299,92 @@ const Turtle = {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Shadow under turtle
+    const pal = palette || (typeof TimeSystem !== 'undefined' ? TimeSystem.getCurrentPalette() : null);
+    const eyes = TimeSystem.eyeColours(pal);
+
+    const shellHi = this.inWater ? '#5a8a3a' : '#6a9a4a';
+    // Darker greens: main shell text, scutes, tail, limbs
+    const shellMid = this.inWater ? '#3d6e34' : '#4d7e44';
+    const shellPattern = this.inWater ? '#2c4f26' : '#3c5f34';
+    const limbCol = this.inWater ? '#335828' : '#436838';
+    const legWiggle = Math.sin(t * 4) * 3 * Math.min(1, this.speed / 0.4);
+
+    // Soft underwater hint — tiny dots (ASCII), not a vector blob
     if (this.inWater) {
-      ctx.fillStyle = 'rgba(0,0,0,0.1)';
-      ctx.beginPath();
-      ctx.ellipse(3, 3, s * 0.55, s * 0.4, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = '#1a2a1a';
+      ctx.font = `${Math.max(8, Math.floor(s * 0.12))}px monospace`;
+      ctx.fillText('·', s * 0.08, s * 0.22);
+      ctx.fillText('·', -s * 0.06, s * 0.18);
+      ctx.fillText('·', s * 0.02, s * 0.26);
     }
 
-    // --- Legs (ASCII, drawn behind shell) ---
-    ctx.globalAlpha = 0.85;
-    const legWiggle = Math.sin(t * 4) * 4 * Math.min(1, this.speed / 0.4);
-    const legColour = this.inWater ? '#5a8a50' : '#6a9a5a';
-    ctx.fillStyle = legColour;
-    ctx.font = `${Math.floor(s * 0.32)}px monospace`;
-    // Front legs
-    ctx.fillText('~', s * 0.25, -s * 0.32 + legWiggle);
-    ctx.fillText('~', s * 0.25, s * 0.32 - legWiggle);
-    // Back legs
-    ctx.fillText('~', -s * 0.3, -s * 0.28 - legWiggle * 0.7);
-    ctx.fillText('~', -s * 0.3, s * 0.28 + legWiggle * 0.7);
+    // Back feet + tail (read rear → front like the fish)
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = limbCol;
+    ctx.font = `${Math.floor(s * 0.24)}px monospace`;
+    ctx.fillText('.', -s * 0.34, -s * 0.22 - legWiggle * 0.5);
+    ctx.fillText('.', -s * 0.34, s * 0.22 + legWiggle * 0.5);
+    ctx.fillStyle = shellPattern;
+    ctx.font = `${Math.floor(s * 0.2)}px monospace`;
+    ctx.fillText('~', -s * 0.46, Math.sin(t * 3) * 2);
 
-    // --- Tail ---
-    ctx.fillStyle = '#4a7a3a';
-    ctx.font = `${Math.floor(s * 0.22)}px monospace`;
-    ctx.fillText('~', -s * 0.5, Math.sin(t * 3) * 2);
-
-    // --- Shell background (flat color oval) ---
+    // Shell — shaded oval behind ASCII (original look)
     ctx.globalAlpha = 0.85;
-    ctx.fillStyle = this.inWater ? '#5a8a3a' : '#6a9a4a';
+    ctx.fillStyle = shellHi;
     ctx.beginPath();
     ctx.ellipse(0, 0, s * 0.38, s * 0.3, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // --- Shell pattern (ASCII characters over the gradient) ---
-    ctx.globalAlpha = 0.6;
-    const shellChars = ['@', '#', '@', '&', '#', '@', '#', '&', '@'];
-    ctx.font = `${Math.floor(s * 0.28)}px monospace`;
-    const positions = [
-      [0, 0],
-      [-s*0.14, -s*0.12], [s*0.14, -s*0.12],
-      [-s*0.14, s*0.12], [s*0.14, s*0.12],
-      [0, -s*0.2], [0, s*0.2],
-      [-s*0.26, 0], [s*0.26, 0],
-    ];
-    for (let i = 0; i < positions.length; i++) {
-      const [px, py] = positions[i];
-      // Only render if inside shell ellipse
-      const nd = (px*px)/(s*0.36*s*0.36) + (py*py)/(s*0.28*s*0.28);
-      if (nd < 1) {
-        const shade = 0.6 + Math.sin(i * 1.7) * 0.2;
-        const r = Math.floor(60 * shade);
-        const g = Math.floor(95 * shade);
-        const b = Math.floor(45 * shade);
-        ctx.fillStyle = `rgb(${r},${g},${b})`;
-        ctx.fillText(shellChars[i], px, py);
-      }
-    }
+    // Shell — monospace cluster on top
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = shellMid;
+    ctx.font = `${Math.floor(s * 0.36)}px monospace`;
+    ctx.fillText('(@)', 0, 0);
+    ctx.font = `${Math.floor(s * 0.18)}px monospace`;
+    ctx.fillStyle = shellPattern;
+    ctx.fillText('·', -s * 0.08, -s * 0.1);
+    ctx.fillText('·', s * 0.08, -s * 0.1);
+    ctx.fillText('·', 0, s * 0.11);
 
-    // --- Head ---
+    // Front feet
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = limbCol;
+    ctx.font = `${Math.floor(s * 0.24)}px monospace`;
+    ctx.fillText('~', s * 0.22, -s * 0.26 + legWiggle);
+    ctx.fillText('~', s * 0.22, s * 0.26 - legWiggle);
+
+    // Head — original ellipse + `o` + small arc eyes (time-of-day colours)
     ctx.globalAlpha = 1;
     const headExt = this.headUp ? s * 0.55 : s * 0.45;
     const headBob = Math.sin(this.wiggle) * 2;
     const headX = headExt;
     const headY = headBob;
 
-    // Head as ASCII 'o' with a subtle filled circle behind it
     ctx.fillStyle = this.inWater ? '#6a9a55' : '#7aaa65';
     ctx.beginPath();
     ctx.ellipse(headX, headY, s * 0.1, s * 0.08, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Head character
     ctx.fillStyle = '#4a7a3a';
     ctx.font = `${Math.floor(s * 0.3)}px monospace`;
     ctx.fillText('o', headX, headY);
 
-    // Eyes
     const eyeSpacing = s * 0.04;
     const eyeX = headX + s * 0.04;
     if (this.eyesClosed) {
-      // Closed eyes — small dashes
-      ctx.strokeStyle = '#2a4a2a';
+      ctx.strokeStyle = eyes.closed;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(eyeX - s*0.015, headY - eyeSpacing);
-      ctx.lineTo(eyeX + s*0.015, headY - eyeSpacing);
+      ctx.moveTo(eyeX - s * 0.015, headY - eyeSpacing);
+      ctx.lineTo(eyeX + s * 0.015, headY - eyeSpacing);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(eyeX - s*0.015, headY + eyeSpacing);
-      ctx.lineTo(eyeX + s*0.015, headY + eyeSpacing);
+      ctx.moveTo(eyeX - s * 0.015, headY + eyeSpacing);
+      ctx.lineTo(eyeX + s * 0.015, headY + eyeSpacing);
       ctx.stroke();
     } else {
-      ctx.fillStyle = '#1a2a1a';
+      ctx.fillStyle = eyes.open;
       ctx.beginPath();
       ctx.arc(eyeX, headY - eyeSpacing, s * 0.018, 0, Math.PI * 2);
       ctx.fill();

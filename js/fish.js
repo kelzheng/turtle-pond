@@ -100,7 +100,7 @@ class Fish {
     this.speed = 0.2 + Math.random() * 0.5;
   }
 
-  render(ctx, time) {
+  render(ctx, time, palette) {
     const t = time * 0.001;
     const tailWag = Math.sin(this.tailPhase + t * 6) * 0.3;
 
@@ -110,6 +110,8 @@ class Fish {
     ctx.globalAlpha = 0.35 + this.depth * 0.2; // underwater = translucent
 
     const s = this.size;
+    const pal = palette || TimeSystem.getCurrentPalette();
+    const eyes = TimeSystem.eyeColours(pal);
 
     // Body
     ctx.fillStyle = this.palette.body;
@@ -127,11 +129,13 @@ class Fish {
     ctx.fillText('<', 0, 0);
     ctx.restore();
 
-    // Eye
-    ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath();
-    ctx.arc(s * 0.25, -s * 0.05, s * 0.05, 0, Math.PI * 2);
-    ctx.fill();
+    // Eyes (two pupils — same time-of-day scheme as turtle)
+    ctx.fillStyle = eyes.open;
+    ctx.font = `${Math.floor(s * 0.22)}px monospace`;
+    const ex = s * 0.28;
+    const ey = s * 0.06;
+    ctx.fillText('•', ex, -ey);
+    ctx.fillText('•', ex, ey);
 
     ctx.restore();
 
@@ -176,9 +180,9 @@ const Fishes = {
     }
   },
 
-  render(ctx, time) {
+  render(ctx, time, palette) {
     for (const f of this.list) {
-      f.render(ctx, time);
+      f.render(ctx, time, palette);
     }
   },
 

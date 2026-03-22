@@ -62,14 +62,14 @@ A pond and its inhabitants. Interactive canvas.
 | **Drag fish** | Pick up and relocate within pond. |
 | **Drag dragonflies** | Grab and relocate. Resume flying. |
 | **Drag drawn elements** | Move lily pads, flowers, rocks. |
-| **Click-drag on water** | Draw lily pads and flowers (max count enforced). |
+| **Click-drag on water** | Draw lily pads and flowers along the stroke (minimum spacing between placements). |
 | **Click on land** | Place rocks or wildflowers. |
 | **Right-click creature** | Pet it — floating ♥ appears, grows bigger with more pets. |
 | **Click default name in status bar** (`turtle`, `dragonfly 1`, `fish 1`, …) | Prompt to name that creature (**one-time**; name persists). **Clicking the creature in the world does not open the prompt.** |
 | **Eraser button (✕, bottom-right)** | Toggle eraser mode to remove drawn elements. |
 | **WASD keys** | Pan camera around the world. |
 | **Clock slider (top-right)** | Drag to change time of day. Click clock face to reset to real time. |
-| **Status bar (top-left)** | Fed progress: `●` per meal (turtle, fish, dragonflies). Unnamed labels are **clickable** to name. |
+| **Status bar (top-left)** | Fed progress: `●` per meal (turtle up to 20, fish & dragonflies up to 12). Row `✿ n @ m` = land flowers / lily pads drawn. Unnamed default labels are **clickable** (pointer cursor) to name; small movement cancels the click-to-name gesture. |
 
 ---
 
@@ -80,7 +80,8 @@ A pond and its inhabitants. Interactive canvas.
 - **Surface**: occasionally pops head up with ripple
 - **Land**: sometimes crawls onto shore, eventually returns
 - **Seek food**: detects food within 200px, swims toward it; **catch** uses **mouth** distance (not shell centre) so eating registers reliably
-- **Eat**: **pond food pellets** → **+1 growth** (size `baseSize + growthLevel × 8`). **Lily pads / land flowers** can be nibbled away nearby but **do not** add growth or status `●`
+- **Eat**: **pond food pellets** → **+1 growth** (size `baseSize + growthLevel × 8`). **Lily pads / land flowers** can be nibbled away but **do not** add growth, eating animation, or status `●`
+- **Nibble pads/flowers**: each frame, probability `0.006 × (dt / 16)` to attempt a bite; removes one `lilypad` or `landflower` within **72px** of the turtle
 - **Growth**: max **20** levels; status bar shows up to 20 `●`
 
 ### Fish
@@ -125,9 +126,8 @@ A pond and its inhabitants. Interactive canvas.
 
 ## Drawing System
 
-- Click-drag on water → lily pads and flowers along stroke
+- Click-drag on water → lily pads and flowers along stroke (`minDrawDist` spacing; **no** global max element count)
 - Click on land → rocks or wildflowers
-- Max element count enforced
 - All drawn elements are draggable
 - Eraser mode (✕ button) to click/drag-remove elements
 - Turtle can remove drawn lily pads (and land flowers) by nibbling — no growth from those
@@ -162,6 +162,7 @@ turtle-pond/
 ```
 
 ### Key Implementation Details
+- **Centre pond rock** (`PondRock` / `rock.js`) has been **removed**; turtle no longer has `toRock` / `onRock` states
 - **Fixed world (800x700), scrollable viewport**: camera pans with WASD
 - **Camera transform**: `ctx.translate(-camX, -camY)` for world; clock + **status bar** rendered in **screen space** after `ctx.restore()`
 - **Input → world coords**: pond/drag/draw use `+ camX/camY`; **status bar naming** uses **canvas pixel** coords (`_screenPos`, no camera)
@@ -185,6 +186,5 @@ turtle-pond/
 - Seasonal palette changes
 - Mobile touch gestures for panning
 - Weather (rain, snow)
-- New ponds to discover on WASD pan (ex duck pond)
-- Remove rock?
-- Play as turtle/fish/dragonfly, arrow keys to mov
+- New areas to discover on WASD pan (e.g. duck pond)
+- Play as turtle / fish / dragonfly with arrow-key movement

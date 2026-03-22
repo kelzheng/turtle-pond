@@ -190,7 +190,7 @@ const App = {
     Pond.render(ctx, this.canvas, time, palette);
 
     // Fish (under water, rendered before surface elements)
-    Fishes.render(ctx, time);
+    Fishes.render(ctx, time, palette);
 
     // Drawn elements (lily pads, flowers, rocks)
     Drawing.render(ctx, time);
@@ -205,10 +205,10 @@ const App = {
     Pond.renderRipples(ctx, this.ripples, time);
 
     // Turtle
-    Turtle.render(ctx, time);
+    Turtle.render(ctx, time, palette);
 
     // Dragonflies
-    Dragonflies.render(ctx, time);
+    Dragonflies.render(ctx, time, palette);
 
     // Fireflies
     this._renderFireflies(ctx, time);
