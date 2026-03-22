@@ -136,4 +136,47 @@ const TimeSystem = {
     }
     return { open: '#000000', closed: '#2a4a2a' };
   },
+
+  /**
+   * Status bar + HTML chrome (eraser, time slider) from sky brightness.
+   * The analog clock on its own canvas uses fixed translucent white (see `main.js` `_renderClock`).
+   */
+  uiPalette(palette) {
+    const lum = this.skyLuminance(palette);
+    const lightSky = lum >= 0.46;
+    if (lightSky) {
+      return {
+        lightSky: true,
+        status: {
+          turtle: '#06380a',
+          dragonfly: '#023a52',
+          fish: '#0c2238',
+          counts: '#0f3510',
+        },
+        eraser: {
+          border: 'rgba(0, 0, 0, 0.42)',
+          color: 'rgba(12, 28, 18, 0.95)',
+          bg: 'rgba(255, 255, 255, 0.55)',
+        },
+        sliderTrack: 'rgba(0, 0, 0, 0.28)',
+        sliderThumb: 'rgba(25, 55, 40, 0.95)',
+      };
+    }
+    return {
+      lightSky: false,
+      status: {
+        turtle: '#b8f578',
+        dragonfly: '#5ddbff',
+        fish: '#ffb88a',
+        counts: '#fff59e',
+      },
+      eraser: {
+        border: 'rgba(255, 255, 255, 0.52)',
+        color: 'rgba(255, 255, 255, 0.96)',
+        bg: 'rgba(0, 0, 0, 0.38)',
+      },
+      sliderTrack: 'rgba(255, 255, 255, 0.38)',
+      sliderThumb: 'rgba(255, 255, 255, 0.92)',
+    };
+  },
 };

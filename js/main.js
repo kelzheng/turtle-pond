@@ -73,6 +73,8 @@ const App = {
     this.camX = Pond.cx - window.innerWidth / 2;
     this.camY = Pond.cy - window.innerHeight / 2;
 
+    this._applyUiChrome(TimeSystem.getCurrentPalette());
+
     // Start loop
     this.lastTime = performance.now();
     requestAnimationFrame((t) => this._loop(t));
@@ -197,7 +199,7 @@ const App = {
       Fishes.render(ctx, time, palette);
       Drawing.render(ctx, time);
       Food.render(ctx, time);
-      LandFlies.render(ctx, time);
+      LandFlies.render(ctx, time, palette);
       Pond.renderRipples(ctx, this.ripples, time);
       Turtle.render(ctx, time, palette);
       Dragonflies.render(ctx, time, palette);
@@ -210,8 +212,19 @@ const App = {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
 
+    this._applyUiChrome(palette);
     this._renderClock(time);
-    this._renderStatusBar(ctx);
+    this._renderStatusBar(ctx, palette);
+  },
+
+  _applyUiChrome(palette) {
+    const u = TimeSystem.uiPalette(palette);
+    const r = document.documentElement;
+    r.style.setProperty('--ui-eraser-border', u.eraser.border);
+    r.style.setProperty('--ui-eraser-color', u.eraser.color);
+    r.style.setProperty('--ui-eraser-bg', u.eraser.bg);
+    r.style.setProperty('--ui-slider-track', u.sliderTrack);
+    r.style.setProperty('--ui-slider-thumb', u.sliderThumb);
   },
 
   _renderFireflies(ctx, time) {
@@ -246,7 +259,6 @@ const App = {
     const minutes = TimeSystem.getMinutes();
     const hours = minutes / 60;
 
-    // Clock face
     ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -258,7 +270,6 @@ const App = {
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Hour marks
     for (let i = 0; i < 12; i++) {
       const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
       const inner = r - 4;
@@ -271,7 +282,6 @@ const App = {
       ctx.stroke();
     }
 
-    // Hour hand
     const hourAngle = (hours / 12) * Math.PI * 2 - Math.PI / 2;
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.lineWidth = 2;
@@ -280,7 +290,6 @@ const App = {
     ctx.lineTo(cx + Math.cos(hourAngle) * r * 0.5, cy + Math.sin(hourAngle) * r * 0.5);
     ctx.stroke();
 
-    // Minute hand
     const minAngle = ((minutes % 60) / 60) * Math.PI * 2 - Math.PI / 2;
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 1;
@@ -289,19 +298,19 @@ const App = {
     ctx.lineTo(cx + Math.cos(minAngle) * r * 0.7, cy + Math.sin(minAngle) * r * 0.7);
     ctx.stroke();
 
-    // Center dot
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.beginPath();
     ctx.arc(cx, cy, 2, 0, Math.PI * 2);
     ctx.fill();
   },
 
-  _renderStatusBar(ctx) {
+  _renderStatusBar(ctx, palette) {
     this._statusBarNameRegions = [];
 
     const x = 14;
     let y = 20;
     const lineH = 15;
+    const ui = TimeSystem.uiPalette(palette).status;
 
     const registerUnnamedLabel = (labelText, lineY, creature, type) => {
       if (creature.name) return;
@@ -319,7 +328,7 @@ const App = {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.font = '11px monospace';
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = 1;
 
     const line = (text) => {
       ctx.fillText(text, x, y);
@@ -327,7 +336,7 @@ const App = {
     };
 
     // Turtle stats
-    ctx.fillStyle = '#7aaa5a';
+    ctx.fillStyle = ui.turtle;
     const tName = Turtle.name || 'turtle';
     const tFed = '●'.repeat(Math.min(Turtle.growthLevel, 20));
     const tLove = Turtle.pets ? ' ♥'.repeat(Math.min(Turtle.pets, 5)) : '';
@@ -337,7 +346,7 @@ const App = {
     y += 4;
 
     // Dragonfly stats
-    ctx.fillStyle = '#a0b8c8';
+    ctx.fillStyle = ui.dragonfly;
     for (let i = 0; i < Dragonflies.list.length; i++) {
       const df = Dragonflies.list[i];
       const name = df.name || `dragonfly ${i + 1}`;
@@ -350,7 +359,7 @@ const App = {
     y += 4;
 
     // Fish stats
-    ctx.fillStyle = '#8a9aaa';
+    ctx.fillStyle = ui.fish;
     for (let i = 0; i < Fishes.list.length; i++) {
       const f = Fishes.list[i];
       const name = f.name || `fish ${i + 1}`;
@@ -368,7 +377,7 @@ const App = {
       if (el.type === 'lilypad') lilypads++;
       else if (el.type === 'landflower') flowers++;
     }
-    ctx.fillStyle = '#8aaa7a';
+    ctx.fillStyle = ui.counts;
     line(`✿ ${flowers}  @ ${lilypads}`);
 
     ctx.globalAlpha = 1;

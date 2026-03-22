@@ -75,8 +75,11 @@ const LandFlies = {
     }
   },
 
-  render(ctx, time) {
+  render(ctx, time, palette) {
     const t = time * 0.001;
+    const pal = palette || (typeof TimeSystem !== 'undefined' ? TimeSystem.getCurrentPalette() : null);
+    const darkScene = pal && TimeSystem.skyLuminance(pal) < 0.46;
+
     for (const f of this.list) {
       if (f.eaten) continue;
       ctx.save();
@@ -85,31 +88,60 @@ const LandFlies = {
 
       const s = f.size;
       const flap = 0.78 + Math.abs(Math.sin(f.wingPhase * 2 + t * 12)) * 0.3;
+      const lwWing = Math.max(0.85, s * 0.085) * (darkScene ? 1.2 : 1);
+      const lwBody = Math.max(1, s * 0.1) * (darkScene ? 1.15 : 1);
 
-      ctx.globalAlpha = 0.38;
-      ctx.strokeStyle = 'rgba(55, 45, 35, 0.85)';
-      ctx.lineWidth = Math.max(0.8, s * 0.08);
-      ctx.lineCap = 'round';
-      const span = s * 0.55 * flap;
-      const arm = s * 0.32 * flap;
-      ctx.beginPath();
-      ctx.moveTo(0, -span);
-      ctx.lineTo(0, span);
-      ctx.moveTo(-arm, 0);
-      ctx.lineTo(arm, 0);
-      ctx.stroke();
+      if (darkScene) {
+        ctx.globalAlpha = 0.58;
+        ctx.strokeStyle = 'rgba(235, 220, 188, 0.92)';
+        ctx.lineWidth = lwWing;
+        ctx.lineCap = 'round';
+        const span = s * 0.55 * flap;
+        const arm = s * 0.32 * flap;
+        ctx.beginPath();
+        ctx.moveTo(0, -span);
+        ctx.lineTo(0, span);
+        ctx.moveTo(-arm, 0);
+        ctx.lineTo(arm, 0);
+        ctx.stroke();
 
-      ctx.globalAlpha = 0.92;
-      ctx.strokeStyle = '#2a2218';
-      ctx.lineWidth = Math.max(1, s * 0.1);
-      ctx.beginPath();
-      ctx.moveTo(-s * 0.45, 0);
-      ctx.lineTo(s * 0.2, 0);
-      ctx.stroke();
-      ctx.fillStyle = '#1a1510';
-      ctx.beginPath();
-      ctx.arc(s * 0.22, 0, s * 0.11, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#f2e8d4';
+        ctx.lineWidth = lwBody;
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.45, 0);
+        ctx.lineTo(s * 0.2, 0);
+        ctx.stroke();
+        ctx.fillStyle = '#faf4ea';
+        ctx.beginPath();
+        ctx.arc(s * 0.22, 0, s * 0.11, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.globalAlpha = 0.38;
+        ctx.strokeStyle = 'rgba(55, 45, 35, 0.85)';
+        ctx.lineWidth = lwWing;
+        ctx.lineCap = 'round';
+        const span = s * 0.55 * flap;
+        const arm = s * 0.32 * flap;
+        ctx.beginPath();
+        ctx.moveTo(0, -span);
+        ctx.lineTo(0, span);
+        ctx.moveTo(-arm, 0);
+        ctx.lineTo(arm, 0);
+        ctx.stroke();
+
+        ctx.globalAlpha = 0.92;
+        ctx.strokeStyle = '#2a2218';
+        ctx.lineWidth = lwBody;
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.45, 0);
+        ctx.lineTo(s * 0.2, 0);
+        ctx.stroke();
+        ctx.fillStyle = '#1a1510';
+        ctx.beginPath();
+        ctx.arc(s * 0.22, 0, s * 0.11, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       ctx.restore();
     }

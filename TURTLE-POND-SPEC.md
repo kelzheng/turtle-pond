@@ -25,7 +25,7 @@ A pond and its inhabitants. Interactive canvas.
 | Flowers        | Dusty pink, lavender, pale yellow    |
 | Dragonflies    | Iridescent blue, lavender, teal      |
 | Land flies     | Dark brown / near-black (prey)       |
-| Fish           | Muted green, brown, blue-grey, rusty |
+| Fish           | Rust/koi orange, violet, saturated blue — readable on teal water |
 | Fireflies      | Warm amber glow (dusk/night only)    |
 | Stars          | Pale white-yellow (night only)       |
 

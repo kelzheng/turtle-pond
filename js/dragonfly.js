@@ -143,6 +143,17 @@ class Dragonfly {
     const eyes = TimeSystem.eyeColours(pal);
     const flapOpen = 0.82 + Math.abs(Math.sin(this.wingPhase * 2 + t * 15)) * 0.28;
     const { r, g, b } = this.colour;
+    const darkScene = TimeSystem.skyLuminance(pal) < 0.46;
+    const br = darkScene
+      ? {
+          r: Math.min(255, Math.round(r * 0.5 + 118)),
+          g: Math.min(255, Math.round(g * 0.5 + 128)),
+          b: Math.min(255, Math.round(b * 0.5 + 142)),
+        }
+      : { r, g, b };
+    const wr = br.r + 50;
+    const wg = br.g + 50;
+    const wb = br.b + 50;
 
     // Local +x = forward (flight). Thorax / wing attachment at origin so the + sits on the body axis.
     const tailX = -s * 0.5;
@@ -151,9 +162,9 @@ class Dragonfly {
     const headCx = neckX + headR;
 
     // Wings — + centered on thorax (0,0), lying on the same line as abdomen + thorax
-    ctx.globalAlpha = 0.42;
-    ctx.strokeStyle = `rgb(${r + 50},${g + 50},${b + 50})`;
-    ctx.lineWidth = Math.max(1.2, s * 0.06);
+    ctx.globalAlpha = darkScene ? 0.68 : 0.42;
+    ctx.strokeStyle = `rgb(${Math.min(255, wr)},${Math.min(255, wg)},${Math.min(255, wb)})`;
+    ctx.lineWidth = Math.max(1.2, s * 0.06) * (darkScene ? 1.2 : 1);
     ctx.lineCap = 'round';
     const span = s * 0.48 * flapOpen;
     const arm = s * 0.38 * flapOpen;
@@ -165,16 +176,16 @@ class Dragonfly {
     ctx.stroke();
 
     // Abdomen + thorax (single stroke through wing cross)
-    ctx.globalAlpha = 0.88;
-    ctx.strokeStyle = `rgb(${r},${g},${b})`;
-    ctx.lineWidth = Math.max(1.5, s * 0.075);
+    ctx.globalAlpha = darkScene ? 0.98 : 0.88;
+    ctx.strokeStyle = `rgb(${br.r},${br.g},${br.b})`;
+    ctx.lineWidth = Math.max(1.5, s * 0.075) * (darkScene ? 1.15 : 1);
     ctx.beginPath();
     ctx.moveTo(tailX, 0);
     ctx.lineTo(neckX, 0);
     ctx.stroke();
 
     // Head — circle tangent to thorax end at neckX
-    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillStyle = `rgb(${br.r},${br.g},${br.b})`;
     ctx.beginPath();
     ctx.arc(headCx, 0, headR, 0, Math.PI * 2);
     ctx.fill();
@@ -191,8 +202,10 @@ class Dragonfly {
 
     // Name label
     if (this.name) {
-      ctx.globalAlpha = 0.6;
-      ctx.fillStyle = `rgb(${this.colour.r},${this.colour.g},${this.colour.b})`;
+      ctx.globalAlpha = darkScene ? 0.85 : 0.6;
+      ctx.fillStyle = darkScene
+        ? `rgb(${br.r},${br.g},${br.b})`
+        : `rgb(${this.colour.r},${this.colour.g},${this.colour.b})`;
       ctx.font = '10px monospace';
       ctx.textAlign = 'center';
       ctx.fillText(this.name, this.x, this.y - this.size * 0.7);

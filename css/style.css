@@ -26,7 +26,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  opacity: 0.6;
+  opacity: 0.94;
   transition: opacity 0.3s;
   z-index: 10;
 }
@@ -44,7 +44,7 @@ html, body {
   height: 4px;
   -webkit-appearance: none;
   appearance: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--ui-slider-track, rgba(255, 255, 255, 0.2));
   border-radius: 2px;
   outline: none;
   opacity: 0;
@@ -61,7 +61,16 @@ html, body {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--ui-slider-thumb, rgba(255, 255, 255, 0.7));
+  cursor: pointer;
+}
+
+#time-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ui-slider-thumb, rgba(255, 255, 255, 0.7));
   cursor: pointer;
 }
 
@@ -72,21 +81,21 @@ html, body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  background: rgba(0, 0, 0, 0.15);
-  color: rgba(255, 255, 255, 0.5);
+  border: 2px solid var(--ui-eraser-border, rgba(255, 255, 255, 0.3));
+  background: var(--ui-eraser-bg, rgba(0, 0, 0, 0.15));
+  color: var(--ui-eraser-color, rgba(255, 255, 255, 0.5));
   font-size: 18px;
   cursor: pointer;
   z-index: 10;
-  opacity: 0.5;
-  transition: opacity 0.3s, background 0.3s, border-color 0.3s;
+  opacity: 0.88;
+  transition: opacity 0.3s, background 0.3s, border-color 0.3s, color 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 #eraser-btn:hover {
-  opacity: 0.9;
+  opacity: 1;
 }
 
 #eraser-btn.active {

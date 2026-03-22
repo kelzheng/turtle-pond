@@ -18,12 +18,12 @@ class Fish {
     this.eatTimer = 0;
     this.dragging = false;
 
-    // Colour — muted fish tones
+    // Colour — warm / complementary hues so fish read clearly on teal-green water
     const palettes = [
-      { body: '#7a8a6a', belly: '#9aaa8a' }, // greenish
-      { body: '#8a7a5a', belly: '#aaa080' }, // brown
-      { body: '#6a7a8a', belly: '#8a9aaa' }, // blue-grey
-      { body: '#8a6a5a', belly: '#aa8a7a' }, // rusty
+      { body: '#b84818', belly: '#f0a868' }, // koi rust
+      { body: '#a03810', belly: '#ffc090' }, // deep orange
+      { body: '#6b3d8f', belly: '#c4a0e8' }, // violet (pops vs green water)
+      { body: '#1e5890', belly: '#7eb8e8' }, // saturated blue (not gray)
     ];
     this.palette = palettes[Math.floor(Math.random() * palettes.length)];
   }
@@ -107,7 +107,8 @@ class Fish {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.globalAlpha = 0.35 + this.depth * 0.2; // underwater = translucent
+    // Stronger than before so glyphs stay visible on water; still slightly submerged
+    ctx.globalAlpha = 0.62 + this.depth * 0.16;
 
     const s = this.size;
     const pal = palette || TimeSystem.getCurrentPalette();
@@ -141,7 +142,7 @@ class Fish {
 
     // Name label
     if (this.name) {
-      ctx.globalAlpha = 0.5;
+      ctx.globalAlpha = 0.72;
       ctx.fillStyle = this.palette.body;
       ctx.font = '10px monospace';
       ctx.textAlign = 'center';
