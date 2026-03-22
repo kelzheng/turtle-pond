@@ -12,6 +12,8 @@ const App = {
   camX: 0,
   camY: 0,
   keys: {},
+  /** Screen-space rects for unnamed creature labels in the status bar (filled each render). */
+  _statusBarNameRegions: [],
 
   init() {
     this.canvas = document.getElementById('pond-canvas');
@@ -103,7 +105,8 @@ const App = {
     // Update
     Turtle.update(dt, time, Pond, Food.items, this.ripples, Drawing);
     Food.update(dt, time, Turtle);
-    Dragonflies.update(dt, time, Pond);
+    LandFlies.update(dt, time, Pond);
+    Dragonflies.update(dt, time, Pond, LandFlies);
     Fishes.update(dt, time, Pond, Food.items, Drawing);
     this._updateFireflies(dt, time);
     Input.updateHearts(dt);
@@ -195,6 +198,9 @@ const App = {
 
     // Food
     Food.render(ctx, time);
+
+    // Land flies (dragonfly prey)
+    LandFlies.render(ctx, time);
 
     // Ripples
     Pond.renderRipples(ctx, this.ripples, time);
@@ -304,9 +310,24 @@ const App = {
   },
 
   _renderStatusBar(ctx) {
+    this._statusBarNameRegions = [];
+
     const x = 14;
     let y = 20;
     const lineH = 15;
+
+    const registerUnnamedLabel = (labelText, lineY, creature, type) => {
+      if (creature.name) return;
+      const w = ctx.measureText(labelText).width;
+      this._statusBarNameRegions.push({
+        left: x,
+        top: lineY,
+        right: x + w,
+        bottom: lineY + lineH,
+        creature,
+        type,
+      });
+    };
 
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
@@ -323,6 +344,7 @@ const App = {
     const tName = Turtle.name || 'turtle';
     const tFed = '●'.repeat(Math.min(Turtle.growthLevel, 20));
     const tLove = Turtle.pets ? ' ♥'.repeat(Math.min(Turtle.pets, 5)) : '';
+    registerUnnamedLabel(tName, y, Turtle, 'turtle');
     line(`${tName}: ${tFed}${tLove}`);
 
     y += 4;
@@ -332,8 +354,10 @@ const App = {
     for (let i = 0; i < Dragonflies.list.length; i++) {
       const df = Dragonflies.list[i];
       const name = df.name || `dragonfly ${i + 1}`;
+      const fed = '●'.repeat(Math.min(df.growthLevel || 0, 12));
       const love = df.pets ? ' ♥'.repeat(Math.min(df.pets, 5)) : '';
-      line(`${name}:${love || ' —'}`);
+      registerUnnamedLabel(name, y, df, 'dragonfly');
+      line(`${name}: ${fed}${love}`);
     }
 
     y += 4;
@@ -345,6 +369,7 @@ const App = {
       const name = f.name || `fish ${i + 1}`;
       const fed = '●'.repeat(Math.min(f.growthLevel, 12));
       const love = f.pets ? ' ♥'.repeat(Math.min(f.pets, 5)) : '';
+      registerUnnamedLabel(name, y, f, 'fish');
       line(`${name}: ${fed}${love}`);
     }
 
@@ -360,6 +385,22 @@ const App = {
     line(`✿ ${flowers}  @ ${lilypads}`);
 
     ctx.globalAlpha = 1;
+  },
+
+  /** Hit-test status bar label in canvas pixel space (not world coords). */
+  statusBarHitTest(screenX, screenY) {
+    const pad = 3;
+    for (const r of this._statusBarNameRegions) {
+      if (
+        screenX >= r.left - pad &&
+        screenX <= r.right + pad &&
+        screenY >= r.top - pad &&
+        screenY <= r.bottom + pad
+      ) {
+        return { creature: r.creature, type: r.type };
+      }
+    }
+    return null;
   }
 };
 

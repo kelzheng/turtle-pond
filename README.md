@@ -1,18 +1,14 @@
 # Turtle Pond
 
-A small canvas playground: turtle, dragonflies, fish, pond, day/night, drawing lily pads, and snacks.
+A small canvas playground: turtle, dragonflies, fish, pond, day/night, drawing lily pads, water snacks, and land flies for dragonflies.
+
+**Play:** [kelzheng.github.io/turtle-pond](https://kelzheng.github.io/turtle-pond/)
 
 ## GitHub Pages
 
-After you push this repo to GitHub:
+The workflow in `.github/workflows/pages.yml` deploys on every push to `main`. In the repo, **Settings → Pages → Source: GitHub Actions** must be selected once.
 
-1. Open the repository on GitHub → **Settings** → **Pages**.
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-3. The included workflow deploys on every push to `main`. Your site will be at:
-
-   `https://<your-username>.github.io/<repository-name>/`
-
-(If the repository is named `<username>.github.io`, the site root is `https://<username>.github.io/`.)
+Design and behaviour are described in [TURTLE-POND-SPEC.md](TURTLE-POND-SPEC.md).
 
 ## Run locally
 

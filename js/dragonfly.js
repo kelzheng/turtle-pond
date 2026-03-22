@@ -7,7 +7,10 @@ class Dragonfly {
     this.speed = 0.8 + Math.random() * 0.5;
     this.targetX = x;
     this.targetY = y;
-    this.size = 20 + Math.random() * 6;
+    this.baseSize = 20 + Math.random() * 6;
+    this.growthLevel = 0;
+    this.maxGrowth = 12;
+    this.size = this.baseSize;
     this.dragging = false;
     this.wingPhase = Math.random() * Math.PI * 2;
     this.hoverTimer = 0;
@@ -23,11 +26,37 @@ class Dragonfly {
     this.colour = hues[Math.floor(Math.random() * hues.length)];
   }
 
-  update(dt, time, pond) {
+  update(dt, time, pond, landFlies) {
     if (this.dragging) return;
+
+    this.size = this.baseSize + this.growthLevel * 2.5;
 
     const t = time * 0.001;
     this.wingPhase += dt * 0.03;
+
+    let prey = null;
+    let preyDistSq = 380 * 380;
+    if (landFlies && landFlies.list) {
+      for (const fly of landFlies.list) {
+        if (fly.eaten) continue;
+        const fx = fly.x - this.x;
+        const fy = fly.y - this.y;
+        const dsq = fx * fx + fy * fy;
+        if (dsq < preyDistSq) {
+          preyDistSq = dsq;
+          prey = fly;
+        }
+      }
+    }
+
+    if (prey) {
+      this.targetX = prey.x;
+      this.targetY = prey.y;
+      if (this.hovering) {
+        this.hovering = false;
+        this.hoverTimer = 0;
+      }
+    }
 
     if (this.hovering) {
       this.hoverTimer -= dt;
@@ -56,11 +85,21 @@ class Dragonfly {
     // Add some erratic movement
     this.angle += Math.sin(t * 5 + this.wingPhase) * 0.03;
 
-    this.x += Math.cos(this.angle) * this.speed * (dt / 16);
-    this.y += Math.sin(this.angle) * this.speed * (dt / 16);
+    const huntBoost = prey ? 1.12 : 1;
+    this.x += Math.cos(this.angle) * this.speed * huntBoost * (dt / 16);
+    this.y += Math.sin(this.angle) * this.speed * huntBoost * (dt / 16);
 
-    // Reached target?
-    if (dist < 15) {
+    if (prey && !prey.eaten) {
+      const ex = prey.x - this.x;
+      const ey = prey.y - this.y;
+      if (ex * ex + ey * ey < 18 * 18) {
+        prey.eaten = true;
+        if (this.growthLevel < this.maxGrowth) this.growthLevel++;
+      }
+    }
+
+    // Reached wander target (not chasing a fly)
+    if (!prey && dist < 15) {
       if (Math.random() < 0.4) {
         this.hovering = true;
         this.hoverTimer = 1000 + Math.random() * 3000;
@@ -166,9 +205,9 @@ const Dragonflies = {
     }
   },
 
-  update(dt, time, pond) {
+  update(dt, time, pond, landFlies) {
     for (const df of this.list) {
-      df.update(dt, time, pond);
+      df.update(dt, time, pond, landFlies);
     }
   },
 

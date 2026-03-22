@@ -13,6 +13,10 @@ const Input = {
   lastClickY: 0,
   didDrag: false,
   clickedCreature: null,
+  pendingStatusBarName: null,
+  statusBarNameCancelled: false,
+  _statusBarDownSX: 0,
+  _statusBarDownSY: 0,
   hearts: [], // floating heart animations
 
   init(canvas, turtle, dragonflies, food, drawing, pond, ripples) {
@@ -55,7 +59,9 @@ const Input = {
     }, { passive: false });
     canvas.addEventListener('touchend', (e) => {
       e.preventDefault();
-      this._onUp(this.mouseX, this.mouseY);
+      const t = e.changedTouches[0];
+      if (t) this._onUp(t.clientX, t.clientY);
+      else this._onUp(0, 0);
     }, { passive: false });
   },
 
@@ -66,6 +72,17 @@ const Input = {
     return {
       x: (clientX - rect.left) * scaleX + App.camX,
       y: (clientY - rect.top) * scaleY + App.camY
+    };
+  },
+
+  /** Canvas pixel coordinates (status bar / UI — no camera offset). */
+  _screenPos(clientX, clientY) {
+    const rect = this.canvas.getBoundingClientRect();
+    const scaleX = this.canvas.width / rect.width;
+    const scaleY = this.canvas.height / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
     };
   },
 
@@ -107,11 +124,23 @@ const Input = {
     this.mouseDown = true;
     this.didDrag = false;
     this.clickedCreature = null;
+    this.pendingStatusBarName = null;
+    this.statusBarNameCancelled = false;
 
     // Eraser mode
     if (this.drawing.eraserMode) {
       this.drawing.eraseAt(pos.x, pos.y);
       this.drawMode = true;
+      return;
+    }
+
+    // Unnamed creature names: click the label in the status bar (canvas pixels)
+    const sp = this._screenPos(clientX, clientY);
+    const barHit = App.statusBarHitTest(sp.x, sp.y);
+    if (barHit) {
+      this.pendingStatusBarName = barHit;
+      this._statusBarDownSX = sp.x;
+      this._statusBarDownSY = sp.y;
       return;
     }
 
@@ -193,9 +222,19 @@ const Input = {
       return;
     }
 
+    if (this.pendingStatusBarName && this.mouseDown) {
+      const sp = this._screenPos(clientX, clientY);
+      if (Math.hypot(sp.x - this._statusBarDownSX, sp.y - this._statusBarDownSY) > 10) {
+        this.statusBarNameCancelled = true;
+      }
+    }
+
     // Hover cursor
+    const spHover = this._screenPos(clientX, clientY);
     if (this.drawing.eraserMode) {
       this.canvas.style.cursor = 'crosshair';
+    } else if (App.statusBarHitTest(spHover.x, spHover.y)) {
+      this.canvas.style.cursor = 'pointer';
     } else if (this._creatureAt(pos.x, pos.y) || this.drawing.hitTest(pos.x, pos.y)) {
       this.canvas.style.cursor = 'grab';
     } else {
@@ -204,20 +243,17 @@ const Input = {
   },
 
   _onUp(clientX, clientY) {
-    // If clicked a creature without dragging, prompt for name (only if unnamed)
-    if (this.clickedCreature && !this.didDrag) {
-      const creature = this.clickedCreature;
+    if (this.pendingStatusBarName && !this.statusBarNameCancelled) {
+      const { creature, type } = this.pendingStatusBarName;
       if (!creature.name) {
-        let type = 'creature';
-        if (creature === this.turtle) type = 'turtle';
-        else if (creature instanceof Fish) type = 'fish';
-        else if (creature instanceof Dragonfly) type = 'dragonfly';
         setTimeout(() => {
           const name = prompt(`Name this ${type}:`);
           if (name !== null && name.trim()) creature.name = name.trim();
         }, 50);
       }
     }
+    this.pendingStatusBarName = null;
+    this.statusBarNameCancelled = false;
 
     if (this.dragging) {
       if (this.draggingType === 'turtle') {
@@ -263,6 +299,8 @@ const Input = {
         x: pos.x, y: pos.y,
         born: performance.now(), maxRadius: 15, duration: 1
       });
+    } else if (typeof LandFlies !== 'undefined') {
+      LandFlies.spawn(pos.x, pos.y, performance.now());
     }
   },
 
