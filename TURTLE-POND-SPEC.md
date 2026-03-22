@@ -44,7 +44,7 @@ A pond and its inhabitants. Interactive canvas.
 
 | Creature     | Count | Behaviour |
 |--------------|-------|-----------|
-| Turtle       | 1     | Swims, walks on land, eats **water** food + lily pads, grows when eating |
+| Turtle       | 1     | Swims, walks on land; **pond food** adds growth; may nibble **lily pads / land flowers** off the map without growth |
 | Fish         | 4-7   | Swim underwater, seek and eat **water** food pellets, grow when eating, draggable |
 | Dragonflies  | 3     | Flit and hover above pond; **hunt land flies**, grow when eating; draggable |
 | Land flies   | 0–24  | Spawn on **double-click land**; wander on land only (slower than dragonflies); eaten by dragonflies |
@@ -80,7 +80,7 @@ A pond and its inhabitants. Interactive canvas.
 - **Surface**: occasionally pops head up with ripple
 - **Land**: sometimes crawls onto shore, eventually returns
 - **Seek food**: detects food within 200px, swims toward it; **catch** uses **mouth** distance (not shell centre) so eating registers reliably
-- **Eat**: pond food pellets and nearby lily pads; **+1 growth** per meal; size `baseSize + growthLevel × 8`
+- **Eat**: **pond food pellets** → **+1 growth** (size `baseSize + growthLevel × 8`). **Lily pads / land flowers** can be nibbled away nearby but **do not** add growth or status `●`
 - **Growth**: max **20** levels; status bar shows up to 20 `●`
 
 ### Fish
@@ -130,7 +130,7 @@ A pond and its inhabitants. Interactive canvas.
 - Max element count enforced
 - All drawn elements are draggable
 - Eraser mode (✕ button) to click/drag-remove elements
-- Turtle can eat drawn lily pads
+- Turtle can remove drawn lily pads (and land flowers) by nibbling — no growth from those
 
 ---
 

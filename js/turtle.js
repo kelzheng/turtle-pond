@@ -46,16 +46,16 @@ const Turtle = {
     // Update size based on growth
     this.size = this.baseSize + this.growthLevel * 8;
 
-    // Occasionally nibble a nearby lilypad or flower
-    if (drawing && Math.random() < 0.0005) {
+    // Nibble nearby lily pads / land flowers (scaled with dt so timing is stable)
+    const nibbleChance = 0.006 * (dt / 16);
+    if (drawing && Math.random() < nibbleChance) {
       for (let i = drawing.elements.length - 1; i >= 0; i--) {
         const el = drawing.elements[i];
         if (el.type !== 'lilypad' && el.type !== 'landflower') continue;
         const dx = el.x - this.x;
         const dy = el.y - this.y;
-        if (dx * dx + dy * dy < 50 * 50) {
+        if (dx * dx + dy * dy < 72 * 72) {
           drawing.elements.splice(i, 1);
-          this._grow();
           break;
         }
       }
