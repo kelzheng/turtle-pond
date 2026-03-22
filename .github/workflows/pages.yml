@@ -1,8 +1,14 @@
+# Deploys static site (index.html, css/, js/) to GitHub Pages.
+# If this never runs: Repo Settings → Actions → General → allow Actions;
+#   Settings → Pages → Build and deployment → Source: GitHub Actions.
+# Manual run: Actions → "Deploy GitHub Pages" → Run workflow.
+
 name: Deploy GitHub Pages
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
