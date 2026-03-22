@@ -58,6 +58,7 @@ A pond and its inhabitants. Interactive canvas.
 |--------|-------------|
 | **Double-click on water** | Drops **turtle/fish food** pellet (sinks in pond). Turtle and fish seek it (mouth-based reach for turtle). |
 | **Double-click on land** | Spawns a **land fly** (small flying prey). Dragonflies seek and eat it. |
+| **Double-tap on touch devices** | Same as double-click on water / land (`touchend` timing + proximity); ignored after a drag, eraser use, status-bar name tap, or a draw stroke (finger moved ~38+ world px). |
 | **Drag turtle** | Pick up and drop anywhere. Resumes autonomous behaviour. |
 | **Drag fish** | Pick up and relocate within pond. |
 | **Drag dragonflies** | Grab and relocate. Resume flying. |
@@ -68,6 +69,8 @@ A pond and its inhabitants. Interactive canvas.
 | **Click default name in status bar** (`turtle`, `dragonfly 1`, `fish 1`, …) | Prompt to name that creature (**one-time**; name persists). **Clicking the creature in the world does not open the prompt.** |
 | **Eraser button (✕, bottom-right)** | Toggle eraser mode to remove drawn elements. |
 | **WASD keys** | Pan camera around the world. |
+| **Two-finger pinch (touch)** | Zoom in/out (about the pinch midpoint); spreading/pinching changes scale (~0.38×–2.75×). |
+| **Two-finger drag (touch)** | Pan — move both fingers together; same pinch gesture updates pan from the midpoint. |
 | **Clock slider (top-right)** | Drag to change time of day. Click clock face to reset to real time. |
 | **Status bar (top-left)** | Fed progress: `●` per meal (turtle up to 20, fish & dragonflies up to 12). Row `✿ n @ m` = land flowers / lily pads drawn. Unnamed default labels are **clickable** (pointer cursor) to name; small movement cancels the click-to-name gesture. |
 
@@ -165,8 +168,9 @@ turtle-pond/
 ### Key Implementation Details
 - **Centre pond rock** (`PondRock` / `rock.js`) has been **removed**; turtle no longer has `toRock` / `onRock` states
 - **Fixed world (800x700), scrollable viewport**: camera pans with WASD
-- **Camera transform**: `ctx.translate(-camX, -camY)` for world; clock + **status bar** rendered in **screen space** after `ctx.restore()`
-- **Input → world coords**: pond/drag/draw use `+ camX/camY`; **status bar naming** uses **canvas pixel** coords (`_screenPos`, no camera)
+- **Camera transform**: `translate(screen/2)`, `scale(viewZoom)`, `translate(-viewCenterX, -viewCenterY)` for world; clock + **status bar** in **screen space** after `ctx.restore()`
+- **Input → world coords**: `(screen - size/2) / viewZoom + viewCenter`; **status bar naming** uses **canvas pixel** coords (`_screenPos`, no camera / zoom)
+- **Touch**: second finger down aborts single-finger draw/drag and starts **pinch** (zoom + pan from two-finger midpoint); see `Input._pinchMove`
 - **Turtle AI**: state machine — wander, idle, seekFood (mouth reach + marks food eaten), surfacing, toLand, toWater
 - **Fish AI**: seek water food within radius, smooth turning, underwater transparency
 - **Dragonfly AI**: if any land fly exists, target closest; eat in range; `Dragonflies.update(..., LandFlies)`

@@ -16,6 +16,7 @@ html, body {
   display: block;
   width: 100%;
   height: 100%;
+  touch-action: none; /* let the game handle pan/draw; enables reliable double-tap */
 }
 
 #clock-widget {

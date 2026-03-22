@@ -9,8 +9,10 @@ const App = {
   fireflies: [],
   lastTime: 0,
   stars: [],
-  camX: 0,
-  camY: 0,
+  /** World point at screen centre; `viewZoom` scales world→screen (1 = 1 world px per css px). */
+  viewCenterX: 0,
+  viewCenterY: 0,
+  viewZoom: 1,
   keys: {},
   /** Screen-space rects for unnamed creature labels in the status bar (filled each render). */
   _statusBarNameRegions: [],
@@ -69,9 +71,9 @@ const App = {
     window.addEventListener('keydown', (e) => { this.keys[e.key.toLowerCase()] = true; });
     window.addEventListener('keyup', (e) => { this.keys[e.key.toLowerCase()] = false; });
 
-    // Center camera on pond
-    this.camX = Pond.cx - window.innerWidth / 2;
-    this.camY = Pond.cy - window.innerHeight / 2;
+    this.viewCenterX = Pond.cx;
+    this.viewCenterY = Pond.cy;
+    this.viewZoom = 1;
 
     this._applyUiChrome(TimeSystem.getCurrentPalette());
 
@@ -97,12 +99,11 @@ const App = {
         this.timeSlider.value = now.getHours() * 60 + now.getMinutes();
       }
 
-      // Camera pan with WASD
       const panSpeed = 0.4;
-      if (this.keys['w']) this.camY -= panSpeed * dt;
-      if (this.keys['s']) this.camY += panSpeed * dt;
-      if (this.keys['a']) this.camX -= panSpeed * dt;
-      if (this.keys['d']) this.camX += panSpeed * dt;
+      if (this.keys['w']) this.viewCenterY -= panSpeed * dt;
+      if (this.keys['s']) this.viewCenterY += panSpeed * dt;
+      if (this.keys['a']) this.viewCenterX -= panSpeed * dt;
+      if (this.keys['d']) this.viewCenterX += panSpeed * dt;
 
       // Update
       Turtle.update(dt, time, Pond, Food.items, this.ripples, Drawing);
@@ -180,14 +181,17 @@ const App = {
 
     ctx.save();
     try {
-      ctx.translate(-this.camX, -this.camY);
+      const z = this.viewZoom;
+      ctx.translate(w / 2, h / 2);
+      ctx.scale(z, z);
+      ctx.translate(-this.viewCenterX, -this.viewCenterY);
 
       // Stars (at night)
       if (TimeSystem.isNight() || TimeSystem.isDusk()) {
         const nightness = TimeSystem.isNight() ? 0.8 : 0.3;
         for (const star of this.stars) {
-          const sx = star.x - this.camX;
-          const sy = star.y - this.camY;
+          const sx = (star.x - this.viewCenterX) * z + w / 2;
+          const sy = (star.y - this.viewCenterY) * z + h / 2;
           if (sx < -5 || sx > w + 5 || sy < -5 || sy > h + 5) continue;
           const twinkle = Math.sin(t * 1.5 + star.twinkle) * 0.3 + 0.7;
           ctx.fillStyle = `rgba(255, 255, 240, ${twinkle * nightness})`;
