@@ -14,7 +14,7 @@ const Turtle = {
   name: '',
 
   // AI state
-  state: 'wander',  // wander, seekFood, idle, surfacing, toLand, toWater, onRock
+  state: 'wander',  // wander, seekFood, idle, surfacing, toLand, toWater
   stateTimer: 0,
   wanderAngle: 0,
   targetX: 0,
@@ -75,12 +75,6 @@ const Turtle = {
             this.stateTimer = 2000 + Math.random() * 2000;
             this.headUp = true;
             ripples.push({ x: this.x, y: this.y, born: time, maxRadius: 20, duration: 1.5 });
-          } else if (r < 0.28 && this.inWater && typeof PondRock !== 'undefined') {
-            // Go sit on the rock
-            this.state = 'toRock';
-            this.targetX = PondRock.x;
-            this.targetY = PondRock.y - PondRock.size * 0.3;
-            this.targetSpeed = 0.3;
           } else if (r < 0.35 && this.inWater) {
             this.state = 'toLand';
             this._pickLandTarget(pond);
@@ -174,27 +168,6 @@ const Turtle = {
         }
         break;
 
-      case 'toRock':
-        if (this._seekTarget(dt)) {
-          this.state = 'onRock';
-          this.stateTimer = 5000 + Math.random() * 8000;
-          this.eyesClosed = true;
-          this.targetSpeed = 0;
-        }
-        this._checkForFood(foodItems);
-        break;
-
-      case 'onRock':
-        this.targetSpeed = 0;
-        this.eyesClosed = true;
-        this.stateTimer -= dt;
-        if (this.stateTimer <= 0) {
-          this.eyesClosed = false;
-          this.state = 'toWater';
-          this.targetX = pond.cx + (Math.random() - 0.5) * pond.rx * 0.4;
-          this.targetY = pond.cy + (Math.random() - 0.5) * pond.ry * 0.4;
-        }
-        break;
     }
 
     // Eating animation

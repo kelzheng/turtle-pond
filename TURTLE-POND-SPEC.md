@@ -26,7 +26,6 @@ A pond and its inhabitants. Interactive canvas.
 | Dragonflies    | Iridescent blue, lavender, teal      |
 | Land flies     | Dark brown / near-black (prey)       |
 | Fish           | Muted green, brown, blue-grey, rusty |
-| Rock           | Flat grey-brown with ASCII texture   |
 | Fireflies      | Warm amber glow (dusk/night only)    |
 | Stars          | Pale white-yellow (night only)       |
 
@@ -37,7 +36,6 @@ A pond and its inhabitants. Interactive canvas.
 - **Fixed world size** (800x700) — viewport shows what fits, WASD to pan
 - **Pond**: irregular wobble-edged shape, ~60-70% of world
 - **Land**: minimal — sparse dots, no busy grass texture
-- **Rock**: large irregular ASCII rock (`O`, `@`, `o`, `·`) in centre of pond
 - **No text** except creature names and the clock widget (top-right)
 
 ---
@@ -46,7 +44,7 @@ A pond and its inhabitants. Interactive canvas.
 
 | Creature     | Count | Behaviour |
 |--------------|-------|-----------|
-| Turtle       | 1     | Swims, walks on land, sits on rock (eyes closed), eats **water** food + lily pads, grows when eating |
+| Turtle       | 1     | Swims, walks on land, eats **water** food + lily pads, grows when eating |
 | Fish         | 4-7   | Swim underwater, seek and eat **water** food pellets, grow when eating, draggable |
 | Dragonflies  | 3     | Flit and hover above pond; **hunt land flies**, grow when eating; draggable |
 | Land flies   | 0–24  | Spawn on **double-click land**; wander on land only (slower than dragonflies); eaten by dragonflies |
@@ -81,7 +79,6 @@ A pond and its inhabitants. Interactive canvas.
 - **Wander**: gentle arcs through the pond
 - **Surface**: occasionally pops head up with ripple
 - **Land**: sometimes crawls onto shore, eventually returns
-- **Rock rest**: climbs onto centre rock, closes eyes, rests 5-13s
 - **Seek food**: detects food within 200px, swims toward it; **catch** uses **mouth** distance (not shell centre) so eating registers reliably
 - **Eat**: pond food pellets and nearby lily pads; **+1 growth** per meal; size `baseSize + growthLevel × 8`
 - **Growth**: max **20** levels; status bar shows up to 20 `●`
@@ -161,7 +158,6 @@ turtle-pond/
     drawing.js       — user drawing (lily pads, flowers, rocks)
     time.js          — time-of-day palettes, day/night cycle
     input.js         — drag, draw, pet; double-click water vs land; status-bar naming
-    rock.js          — centre pond rock
   TURTLE-POND-SPEC.md  (this file)
 ```
 
@@ -169,7 +165,7 @@ turtle-pond/
 - **Fixed world (800x700), scrollable viewport**: camera pans with WASD
 - **Camera transform**: `ctx.translate(-camX, -camY)` for world; clock + **status bar** rendered in **screen space** after `ctx.restore()`
 - **Input → world coords**: pond/drag/draw use `+ camX/camY`; **status bar naming** uses **canvas pixel** coords (`_screenPos`, no camera)
-- **Turtle AI**: state machine — wander, idle, seekFood (mouth reach + marks food eaten), surfacing, toLand, toWater, toRock, onRock
+- **Turtle AI**: state machine — wander, idle, seekFood (mouth reach + marks food eaten), surfacing, toLand, toWater
 - **Fish AI**: seek water food within radius, smooth turning, underwater transparency
 - **Dragonfly AI**: if any land fly exists, target closest; eat in range; `Dragonflies.update(..., LandFlies)`
 - **Update order**: `LandFlies.update` then `Dragonflies.update` so positions stay consistent

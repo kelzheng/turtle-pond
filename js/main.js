@@ -27,7 +27,6 @@ const App = {
 
     // Init systems
     Pond.init(this.canvas);
-    PondRock.init(Pond);
     Turtle.init(Pond.cx, Pond.cy);
     Dragonflies.init(Pond);
     Fishes.init(Pond);
@@ -204,9 +203,6 @@ const App = {
 
     // Ripples
     Pond.renderRipples(ctx, this.ripples, time);
-
-    // Rock (before creatures so they sit on top)
-    PondRock.render(ctx, time);
 
     // Turtle
     Turtle.render(ctx, time);
