@@ -2,7 +2,7 @@
 
 ## Overview
 
-An interactive ASCII pond and its inhabitants. **Live site:** [GitHub Pages](https://kelzheng.github.io/turtle-pond/) — deploys from `main` via `.github/workflows/pages.yml` (static bundle: `index.html`, `css/`, `js/`).
+An interactive ASCII pond and its inhabitants.
 
 ---
 
@@ -190,3 +190,5 @@ turtle-pond/
 - Mobile touch gestures for panning
 - Weather (rain, snow, ice)
 - New turtle ponds to discover on WASD pan
+- Remove rock?
+- Play as turtle/fish/dragonfly, arrow keys to move
