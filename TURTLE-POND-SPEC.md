@@ -2,7 +2,7 @@
 
 ## Overview
 
-An interactive ASCII pond and its inhabitants.
+A pond and its inhabitants. Interactive canvas.
 
 ---
 
@@ -188,7 +188,7 @@ turtle-pond/
 - Save/load state via localStorage
 - Seasonal palette changes
 - Mobile touch gestures for panning
-- Weather (rain, snow, ice)
-- New turtle ponds to discover on WASD pan
+- Weather (rain, snow)
+- New ponds to discover on WASD pan (ex duck pond)
 - Remove rock?
-- Play as turtle/fish/dragonfly, arrow keys to move
+- Play as turtle/fish/dragonfly, arrow keys to mov
